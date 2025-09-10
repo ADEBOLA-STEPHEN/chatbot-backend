@@ -10,7 +10,7 @@ from flask_cors import CORS
 import difflib
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 # Load model and vectorizer
 with open("model.pkl", "rb") as f:
@@ -97,6 +97,13 @@ conversation_state = {"greeting_step": 0}
 
 
 @app.route("/chat", methods=["POST"])
+
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
+
 def chat():
     global last_intent, conversation_state
     user_input = request.json.get("message", "")
