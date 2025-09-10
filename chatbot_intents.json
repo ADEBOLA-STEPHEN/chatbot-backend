@@ -1,0 +1,36 @@
+{
+    "intents": [
+        {
+            "tag": "greeting",
+            "patterns": ["Hi","Hello","Hey","Good morning","Good evening",
+                         "What's up?","How are you?","Greetings","Yo","Hey there","How are you doing today?"],
+            "responses": ["Hello! How do you do?","Hey there!","Hi, nice to meet you 😊",
+                          "Greetings! How do you do?","What's up?","How's your day going?","I'm doing great, how about you?"]
+        },
+        {
+            "tag": "name",
+            "patterns": ["What's your name?","What moniker what given to you by your creator?","Tell me your name",
+                         "Do you have a name?","May I know your name?",
+                         "What should I call you?","Are you a bot?",
+                         "Introduce yourself","Name please","Tell me who you are"],
+            "responses": ["I'm your friendly Moyennn!","They call me Moyennn!",
+                          "I'm an AI assistant called Moyennn","A humble bot here to help😊"]
+        },
+        {
+            "tag": "time",
+            "patterns": ["What time is it?","Tell me the time","Current time?",
+                         "Can you give me the time?","Clock please",
+                         "What's the hour?","Time right now?",
+                         "Tell me the hour","Give me the time","Local time please"],
+            "responses": []
+        },
+        {
+            "tag": "weather",
+            "patterns": ["What's the weather?","Weather today?","Is it hot outside?",
+                         "Tell me the forecast","Do I need an umbrella?",
+                         "What's the temperature?","How's the sky?",
+                         "Weather in Lagos","Forecast please","Sunny today?","Weather in Akure"],
+            "responses": []
+        }
+    ]
+}
