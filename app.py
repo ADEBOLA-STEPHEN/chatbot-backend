@@ -10,7 +10,7 @@ from flask_cors import CORS
 import difflib
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app)
 
 # Load model and vectorizer
 with open("model.pkl", "rb") as f:
