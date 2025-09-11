@@ -10,7 +10,15 @@ from flask_cors import CORS
 import difflib
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://adebola-stephen.github.io"]}})
+CORS(app, resources={r"/*": {"origins":["https://adebola-stephen.github.io"]}}, supports_credentials=False)
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "https://adebola-stephen.github.io"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
+
 
 
 # ---------------- LOAD DATA ----------------
