@@ -10,16 +10,16 @@ from flask_cors import CORS
 import difflib
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://adebola-stephen.github.io"]}})
 
-# Load model and vectorizer
+
+# ---------------- LOAD DATA ----------------
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
 
 with open("vectorizer.pkl", "rb") as f:
     vectorizer = pickle.load(f)
 
-# Load intents
 with open("chatbot_intents.json", "r") as f:
     intents = json.load(f)
 
@@ -46,22 +46,18 @@ def get_weather(user_input, default_city="Lagos"):
 # ---------------- WORLD TIME ----------------
 def get_world_time(location_name):
     try:
-        # Get all timezones from API
         url = "http://worldtimeapi.org/api/timezone"
         response = requests.get(url, timeout=5)
         response.raise_for_status()
         timezones = response.json()
 
-        # Try to match location (fuzzy match against last part of timezone)
         candidates = [tz.split("/")[-1] for tz in timezones]
         match = difflib.get_close_matches(location_name.title(), candidates, n=1, cutoff=0.6)
 
         if not match:
             return f"Sorry, I couldn't determine the timezone for {location_name} ⏰"
 
-        # Rebuild full timezone path
         full_tz = next(tz for tz in timezones if tz.endswith(match[0]))
-
         tz_url = f"http://worldtimeapi.org/api/timezone/{full_tz}"
         tz_response = requests.get(tz_url, timeout=5)
         tz_response.raise_for_status()
@@ -71,7 +67,6 @@ def get_world_time(location_name):
         if not datetime_str:
             return f"Time data not available for {location_name} ⏰"
 
-        # Split date and time
         date, time_part = datetime_str.split("T")
         time_clean = time_part.split(".")[0]
 
@@ -97,13 +92,6 @@ conversation_state = {"greeting_step": 0}
 
 
 @app.route("/chat", methods=["POST"])
-
-def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    return response
-
 def chat():
     global last_intent, conversation_state
     user_input = request.json.get("message", "")
@@ -111,7 +99,6 @@ def chat():
     if not user_input:
         return jsonify({"response": "Please say something!"})
 
-    # Split input into smaller queries
     parts = re.split(r"\s*(?:\?|\.|!|,|\band\b)\s*", user_input, flags=re.IGNORECASE)
     parts = [p.strip() for p in parts if p.strip()]
 
@@ -130,7 +117,6 @@ def chat():
             responses.append("I’m not sure I understand 🤔")
             continue
 
-        # Contextual smalltalk
         if last_intent == "greeting" and ("fine" in part.lower() or "good" in part.lower()):
             responses.append("That's good to hear! What can I do for you today? 😊")
             last_intent = "smalltalk"
