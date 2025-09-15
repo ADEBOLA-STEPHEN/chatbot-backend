@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 import json
 import pickle
 import random
-import pytz
 from datetime import datetime
 import re
 import requests
@@ -10,18 +9,11 @@ from flask_cors import CORS
 import difflib
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins":["https://adebola-stephen.github.io"]}}, supports_credentials=True)
 
-@app.after_request
-def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "https://adebola-stephen.github.io"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    return response, 200
+# Allow ONLY your frontend
+CORS(app, resources={r"/chat": {"origins": ["https://adebola-stephen.github.io"]}})
 
-
-
-#LOAD DATASETS
+# ---------------- LOAD DATA ----------------
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
 
@@ -80,10 +72,6 @@ def get_world_time(location_name):
 
         return f"The current time in {location_name.title()} is {date} {time_clean} ⏰"
 
-    except requests.exceptions.Timeout:
-        return f"Request timed out while fetching time for {location_name} ❌"
-    except requests.exceptions.RequestException as e:
-        return f"Error fetching time for {location_name}: {e}"
     except Exception:
         return f"Sorry, I couldn't fetch the time for {location_name} ⏰"
 
@@ -94,54 +82,22 @@ def get_universal_time():
     return f"The current Universal (UTC) time is {now.strftime('%Y-%m-%d %H:%M:%S')} 🌍"
 
 
-# ---------------- CHAT ROUTE ----------------
-last_intent = None
-conversation_state = {"greeting_step": 0}
-
-
-@app.route("/chat", methods=["POST", "OPTIONS"])
-def chat():
-
-    if request.method == "OPTIONS":
-        response = app.make_default_options_response()
-        response.headers["Access-Control-Allow-Origin"] = "https://adebola-stephen.github.io"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        return response, 200
-    
-    data = request.get_json()
-    message = data.get("message", "")
-    reply = chat(message)
-    return jsonify({"response": reply})
-
-    global last_intent, conversation_state
-    user_input = request.json.get("message", "")
-
-    if not user_input:
-        return jsonify({"response": "Please say something!"})
+# ---------------- RESPONSE GENERATOR ----------------
+def generate_response(user_input):
+    global last_intent
 
     parts = re.split(r"\s*(?:\?|\.|!|,|\band\b)\s*", user_input, flags=re.IGNORECASE)
     parts = [p.strip() for p in parts if p.strip()]
 
     responses = []
     answered_intent = set()
-    context_triggered = False
 
     for part in parts:
-        if context_triggered:
-            continue
-
         try:
             X_test = vectorizer.transform([part])
             tag = model.predict(X_test)[0]
         except Exception:
             responses.append("I’m not sure I understand 🤔")
-            continue
-
-        if last_intent == "greeting" and ("fine" in part.lower() or "good" in part.lower()):
-            responses.append("That's good to hear! What can I do for you today? 😊")
-            last_intent = "smalltalk"
-            context_triggered = True
             continue
 
         if tag in answered_intent:
@@ -161,24 +117,25 @@ def chat():
             responses.append(get_weather(part))
 
         else:
-            matched = False
             for intent in intents["intents"]:
                 if intent["tag"] == tag:
-                    if intent["responses"]:
-                        responses.append("Hello! How are you today? 😊" if tag == "greeting" else random.choice(intent["responses"]))
-                    else:
-                        responses.append("Hmm...")
-                    matched = True
+                    responses.append(random.choice(intent["responses"]))
                     break
 
-            if not matched:
-                responses.append("I’m not sure I understand 🤔")
-
-        last_intent = tag
         answered_intent.add(tag)
 
-    final_response = " ".join(responses) if responses else "I didn’t catch that. Could you rephrase? 🤔"
-    return jsonify({"response": final_response})
+    return " ".join(responses) if responses else "I didn’t catch that. Could you rephrase? 🤔"
+
+
+# ---------------- CHAT ROUTE ----------------
+last_intent = None
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.json
+    user_input = data.get("message", "")
+    reply = generate_response(user_input)
+    return jsonify({"response": reply})
 
 
 if __name__ == "__main__":
