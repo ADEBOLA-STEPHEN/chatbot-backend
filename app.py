@@ -123,7 +123,7 @@ def generate_response(user_input):
 
             # Apply confidence threshold
             if confidence < 0.75:
-                responses.append("I didn’t quite get that, could you say it another way? 🤔")
+                responses.append("I’m not sure I understand🤔")
                 continue
         except Exception:
             responses.append("I’m not sure I understand 🤔")
