@@ -15,7 +15,7 @@ BOT_NAME = "Moyennn"
 # Allow ONLY your frontend
 CORS(app, origins=["https://adebola-stephen.github.io"])
 
-# LOAD DATA
+# Load model + vectorizer + intents
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
 
@@ -28,7 +28,7 @@ with open("chatbot_intents.json", "r") as f:
 API_KEY = "8a611495b6b56f082f045d2ffed3389c"
 
 
-# WEATHER
+#Weather
 def get_weather(user_input, default_city="Lagos"):
     match = re.search(r'weather in ([a-zA-Z\s]+)', user_input.lower())
     city = match.group(1).strip().title() if match else default_city
@@ -45,7 +45,7 @@ def get_weather(user_input, default_city="Lagos"):
         return f"Sorry, I couldn’t fetch the weather for {city} 🌧️"
 
 
-# WORLD TIME
+#World Time
 def get_world_time(location_name):
     try:
         url = "http://worldtimeapi.org/api/timezone"
@@ -78,44 +78,35 @@ def get_world_time(location_name):
         return f"Sorry, I couldn't fetch the time for {location_name} ⏰"
 
 
-# UNIVERSAL TIME
+#Universal Time
 def get_universal_time():
     now = datetime.utcnow()
     return f"The current Universal (UTC) time is {now.strftime('%Y-%m-%d %H:%M:%S')} 🌍"
 
 
-# RULE-BASED RESPONSES (priority before ML)
-def rule_based_response(user_input):
-    msg = user_input.lower()
-
-    if any(word in msg for word in ["hi", "hello", "hey"]):
-        return "Hello there 👋"
-
-    elif "how are you" in msg:
-        return "I’m fine, and you? 🙂"
-
-    elif "what can you do" in msg or "help" in msg:
-        return f"I can greet you, tell you my name, give you the time, check the weather in different cities, and chat a little 😊"
-
-    elif "your name" in msg:
-        return f"My name is {BOT_NAME} 🤖"
-
-    elif "time" in msg and ("universal" in msg or "utc" in msg):
-        return get_universal_time()
-
-    return None  # no rule matched
+#Chit-chat Logic
+chit_chat_responses = {
+    "how are you": "I’m fine, and you? 🙂",
+    "good, you": "I’m good too! What can I help you with? 😎",
+    "what can you do": f"I can greet you, tell you my name, give you the time, check the weather in different cities, and chat a little 😊",
+    "let me ask you a question": "Sure, go ahead! 👂",
+    "who are you": f"I'm {BOT_NAME}, your friendly assistant 🤖",
+    "what is your name": f"My name is {BOT_NAME}!",
+}
 
 
-# RESPONSE GENERATION
+#Response Generator
 def generate_response(user_input):
     global last_intent
 
-    # First check rule-based overrides
-    rule_reply = rule_based_response(user_input)
-    if rule_reply:
-        return rule_reply
+    # Normalize input for chit-chat
+    normalized = user_input.lower().strip()
 
-    # Otherwise fall back to ML + intents
+    for key, reply in chit_chat_responses.items():
+        if key in normalized:
+            return reply
+
+    # Split into possible parts (for multiple questions in one sentence)
     parts = re.split(r"\s*(?:\?|\.|!|,|\band\b)\s*", user_input, flags=re.IGNORECASE)
     parts = [p.strip() for p in parts if p.strip()]
 
@@ -125,7 +116,15 @@ def generate_response(user_input):
     for part in parts:
         try:
             X_test = vectorizer.transform([part])
-            tag = model.predict(X_test)[0]
+            proba = model.predict_proba(X_test)[0]
+            max_idx = proba.argmax()
+            confidence = proba[max_idx]
+            tag = model.classes_[max_idx]
+
+            # Apply confidence threshold
+            if confidence < 0.75:
+                responses.append("I didn’t quite get that, could you say it another way? 🤔")
+                continue
         except Exception:
             responses.append("I’m not sure I understand 🤔")
             continue
@@ -134,7 +133,9 @@ def generate_response(user_input):
             continue
 
         if tag == "time":
-            if "in" in part.lower():
+            if "universal" in part.lower() or "utc" in part.lower():
+                responses.append(get_universal_time())
+            elif "in" in part.lower():
                 city = part.split("in")[-1].strip()
                 responses.append(get_world_time(city))
             else:
@@ -152,10 +153,10 @@ def generate_response(user_input):
 
         answered_intent.add(tag)
 
-    return " ".join(responses) if responses else "Sorry, I didn’t quite understand that. Can you try rephrasing? 🤔"
+    return " ".join(responses) if responses else "I didn’t catch that. Could you rephrase? 🤔"
 
 
-# CHAT ROUTE
+#Chat Route
 last_intent = None
 
 @app.route("/chat", methods=["POST"])
