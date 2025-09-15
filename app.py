@@ -11,9 +11,9 @@ import difflib
 app = Flask(__name__)
 
 # Allow ONLY your frontend
-CORS(app, resources={r"/chat": {"origins": ["https://adebola-stephen.github.io"]}})
+CORS(app, origins=["https://adebola-stephen.github.io"])
 
-# ---------------- LOAD DATA ----------------
+#LOAD DATA
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
 
