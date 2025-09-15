@@ -5,7 +5,7 @@
             "patterns": ["Hi","Hello","Hey","Good morning","Good evening",
                          "What's up?","How are you?","Greetings","Yo","Hey there","How are you doing today?"],
             "responses": ["Hello! How do you do?","Hey there!","Hi, nice to meet you 😊",
-                          "Greetings! How do you do?","What's up?","How's your day going?","I'm doing great, how about you?"]
+                          "Greetings! How do you do?","What's up?","How's your day going?"]
         },
         {
             "tag": "name",
@@ -31,6 +31,12 @@
                          "What's the temperature?","How's the sky?",
                          "Weather in Lagos","Forecast please","Sunny today?","Weather in Akure"],
             "responses": []
+        },
+        {
+            "tag": "fallback",
+            "patterns": [],
+            "responses": ["I didn't catch that. Could you rephrase? 🤔",
+                          "I'm not sure I understand that.", "I don't know that, I can only greet you, tell the time, weather and my name 😊"]
         }
     ]
 }
