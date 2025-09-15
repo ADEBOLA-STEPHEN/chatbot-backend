@@ -33,6 +33,23 @@
             "responses": []
         },
         {
+           "tag": "ask_question",
+           "patterns": [
+            "let me ask you a question",
+            "can I ask you something",
+            "I have a question",
+            "I want to ask",
+            "may I ask a question"
+],
+        "responses": [
+            "Sure, go ahead!",
+            "Of course! What's your question?",
+            "Feel free to ask me anything!",
+            "I'm here to help! What's on your mind?"
+     ]
+        },
+
+        {
             "tag": "fallback",
             "patterns": [],
             "responses": ["I didn't catch that. Could you rephrase? 🤔",
