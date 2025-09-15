@@ -10,18 +10,18 @@ from flask_cors import CORS
 import difflib
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins":["https://adebola-stephen.github.io"]}}, supports_credentials=False)
+CORS(app, resources={r"/*": {"origins":["https://adebola-stephen.github.io"]}}, supports_credentials=True)
 
 @app.after_request
 def add_cors_headers(response):
     response.headers["Access-Control-Allow-Origin"] = "https://adebola-stephen.github.io"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    return response
+    return response, 200
 
 
 
-# ---------------- LOAD DATA ----------------
+#LOAD DATASETS
 with open("model.pkl", "rb") as f:
     model = pickle.load(f)
 
@@ -99,8 +99,21 @@ last_intent = None
 conversation_state = {"greeting_step": 0}
 
 
-@app.route("/chat", methods=["POST"])
+@app.route("/chat", methods=["POST", "OPTIONS"])
 def chat():
+
+    if request.method == "OPTIONS":
+        response = app.make_default_options_response()
+        response.headers["Access-Control-Allow-Origin"] = "https://adebola-stephen.github.io"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        return response, 200
+    
+    data = request.get_json()
+    message = data.get("message", "")
+    reply = chat(message)
+    return jsonify({"response": reply})
+
     global last_intent, conversation_state
     user_input = request.json.get("message", "")
 
