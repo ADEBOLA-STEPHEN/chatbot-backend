@@ -28,7 +28,7 @@ with open("chatbot_intents.json", "r") as f:
 API_KEY = "8a611495b6b56f082f045d2ffed3389c"
 
 
-#Weather
+# Weather
 def get_weather(user_input, default_city="Lagos"):
     match = re.search(r'weather in ([a-zA-Z\s]+)', user_input.lower())
     city = match.group(1).strip().title() if match else default_city
@@ -45,7 +45,7 @@ def get_weather(user_input, default_city="Lagos"):
         return f"Sorry, I couldn’t fetch the weather for {city} 🌧️"
 
 
-#World Time
+# World Time
 def get_world_time(location_name):
     try:
         url = "http://worldtimeapi.org/api/timezone"
@@ -78,24 +78,23 @@ def get_world_time(location_name):
         return f"Sorry, I couldn't fetch the time for {location_name} ⏰"
 
 
-#Universal Time
+# Universal Time
 def get_universal_time():
     now = datetime.utcnow()
     return f"The current Universal (UTC) time is {now.strftime('%Y-%m-%d %H:%M:%S')} 🌍"
 
 
-#Chit-chat Logic
+# Chit-chat Logic
 chit_chat_responses = {
     "how are you": "I’m fine, and you? 🙂",
     "good, you": "I’m good too! What can I help you with? 😎",
     "what can you do": f"I can greet you, tell you my name, give you the time, check the weather in different cities, and chat a little 😊",
-    "let me ask you a question": "Sure, go ahead! 👂",
     "who are you": f"I'm {BOT_NAME}, your friendly assistant 🤖",
     "what is your name": f"My name is {BOT_NAME}!",
 }
 
 
-#Response Generator
+# Response Generator
 def generate_response(user_input):
     global last_intent
 
@@ -115,15 +114,15 @@ def generate_response(user_input):
 
     for part in parts:
         try:
-            X_test = vectorizer.transform([part])
+            X_test = vectorizer.transform([part.lower()])
             proba = model.predict_proba(X_test)[0]
             max_idx = proba.argmax()
             confidence = proba[max_idx]
             tag = model.classes_[max_idx]
 
             # Apply confidence threshold
-            if confidence < 0.55:
-                responses.append("I’m not sure I understand🤔")
+            if confidence < 0.3:
+                responses.append("I’m not sure I understand 🤔")
                 continue
         except Exception:
             responses.append("I’m not sure I understand 🤔")
@@ -156,7 +155,7 @@ def generate_response(user_input):
     return " ".join(responses) if responses else "I didn’t catch that. Could you rephrase? 🤔"
 
 
-#Chat Route
+# Chat Route
 last_intent = None
 
 @app.route("/chat", methods=["POST"])
