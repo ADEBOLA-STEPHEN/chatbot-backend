@@ -13,7 +13,7 @@ app = Flask(__name__)
 BOT_NAME = "Moyennn"
 
 # Allow ONLY your frontend
-CORS(app, origins=["https://adebola-stephen.github.io"])
+CORS(app, origins=["http://localhost:3000","https://adebola-stephen.github.io"])
 
 # Load model + vectorizer + intents
 with open("model.pkl", "rb") as f:
