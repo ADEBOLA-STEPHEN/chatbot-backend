@@ -121,7 +121,7 @@ def generate_response(user_input):
             tag = model.classes_[max_idx]
 
             # Apply confidence threshold
-            if confidence < 0.3:
+            if confidence < 0.6:
                 responses.append("I’m not sure I understand 🤔")
                 continue
         except Exception:
